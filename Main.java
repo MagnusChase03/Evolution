@@ -8,7 +8,7 @@ public class Main extends JFrame {
 		
 		setTitle("Evolution");
 		setSize(1024, 330);
-		setResizable(false);
+		//setResizable(false);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		

@@ -16,6 +16,9 @@ public class Runner {
 	private double[] hiddenLayerBias;
 	private double outputBias;
 	
+	private double momentum = 3.0;
+	private boolean isJumping = false;
+	
 	Runner() {
 		
 		x = 100;
@@ -196,6 +199,27 @@ public class Runner {
 
 	void setFitness(int fitness) {
 		this.fitness = fitness;
+	}
+
+	public double getMomentum() {
+		return momentum;
+	}
+
+	public void setMomentum(double momentum) {
+		if(momentum < -7) {
+			
+			momentum = -7.0;
+			
+		}
+		this.momentum = momentum;
+	}
+
+	public boolean isJumping() {
+		return isJumping;
+	}
+
+	public void setJumping(boolean isJumping) {
+		this.isJumping = isJumping;
 	}
 
 	

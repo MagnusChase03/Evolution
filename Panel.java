@@ -1,6 +1,7 @@
 package evolution;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import javax.swing.JPanel;
@@ -11,14 +12,20 @@ public class Panel extends JPanel implements Runnable {
 	private ArrayList<Runner> deadRunners;
 	private ArrayList<Barrier> bars;
 	private int counter;
+	private int gen;
+	private int delay;
+	private int bestFit;
 	
 	Panel() {
 		
+		gen = 1;
+		delay = 100;
+		bestFit = 0;
 		runners = new ArrayList<>();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 20; i++) {
 			
 			runners.add(new Runner());
-			runners.get(i).setX(100 + i * 5);
+			runners.get(i).setX(100 + i * 2);
 			
 		}
 		
@@ -30,9 +37,9 @@ public class Panel extends JPanel implements Runnable {
 	
 	private void crossOver() {
 		
-		Runner[] newGen = new Runner[10];
+		Runner[] newGen = new Runner[20];
 		
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 6; i++) {
 			
 			Runner best = deadRunners.get(0);
 			for (Runner r : deadRunners) {
@@ -43,15 +50,47 @@ public class Panel extends JPanel implements Runnable {
 			}
 			
 			newGen[i] = best;
+			newGen[i].setFitness(0);
 			deadRunners.remove(best);
 			
 		}
 		
-		for (int i = 4; i < 10; i++) {
+		for (int i = 6; i < 20; i++) {
 			
 			Runner a = newGen[(int) (Math.random() * 4)];
 			Runner b = newGen[(int) (Math.random() * 4)];
-			Runner child = new Runner(a.getInputWeights(), b.getHiddenLayerWeights(), b.getHiddenLayerBias(), a.getOutputBias());
+			
+			int randPoint = (int) (Math.random() * 6 + 1);
+			Runner child = null;
+			
+			switch (randPoint) {
+			
+				case 1:
+					child = new Runner(a.getInputWeights(), b.getHiddenLayerWeights(), b.getHiddenLayerBias(), a.getOutputBias());
+					break;
+					
+				case 2:
+					child = new Runner(b.getInputWeights(), a.getHiddenLayerWeights(), a.getHiddenLayerBias(), b.getOutputBias());
+					break;
+					
+				case 3:
+					child = new Runner(a.getInputWeights(), b.getHiddenLayerWeights(), a.getHiddenLayerBias(), b.getOutputBias());
+					break;
+					
+				case 4:
+					child = new Runner(b.getInputWeights(), a.getHiddenLayerWeights(), b.getHiddenLayerBias(), a.getOutputBias());
+					break;
+					
+				case 5:
+					child = new Runner(a.getInputWeights(), a.getHiddenLayerWeights(), b.getHiddenLayerBias(), b.getOutputBias());
+					break;
+					
+				case 6:
+					child = new Runner(b.getInputWeights(), b.getHiddenLayerWeights(), a.getHiddenLayerBias(), a.getOutputBias());
+			
+			
+			}
+			
 			newGen[i] = child;
 			
 		}
@@ -101,12 +140,31 @@ public class Panel extends JPanel implements Runnable {
 			
 			if (newGen[i] != null) {
 			
-				newGen[i].setX(100 + i * 5);
+				newGen[i].setX(100 + i * 2);
 				runners.add(newGen[i]);
 			
 			}
 			
 		}
+		
+		gen++;
+	}
+	
+	private int bestFitness() {
+			
+		Runner best = null;
+		for (Runner r : runners) {
+			
+			if (r.getFitness() >= bestFit)
+				best = r;
+			
+		}
+		
+		if (best == null)
+			return bestFit;
+
+		bestFit = best.getFitness();
+		return best.getFitness();
 		
 	}
 	
@@ -129,8 +187,27 @@ public class Panel extends JPanel implements Runnable {
 			
 			if (r.isCanJump() && r.decide(bars.get(0).getX() - (r.getX() + 20), (r.getY() + 20) - bars.get(0).getY()) > 0.5) {
 			
-				r.setY(r.getY() - 100);
+				r.setMomentum(11.0);
+				r.setJumping(true);
 				r.setCanJump(false);
+				
+			}
+			
+			if(r.isJumping()) {
+				
+
+				if(r.getY() >= 270) {
+					
+					r.setY(270);
+					r.setJumping(false);
+					r.setCanJump(true);
+					
+				}
+				
+				r.setY(r.getY() - (int) r.getMomentum());
+				
+				double a = 0.5;
+				r.setMomentum(r.getMomentum() - a);
 				
 			}
 			
@@ -164,14 +241,15 @@ public class Panel extends JPanel implements Runnable {
 			try {
 				
 				counter++;
-				if (counter >= 100) {
+				if (counter >= delay) {
 				
 					bars.add(new Barrier());
 					counter = 0;
+					delay = (int) (Math.random() * 75 + 75);
 					
 				}
 				
-				Thread.sleep(1000/60);
+				Thread.sleep(1000/1000);
 				update();
 				repaint();
 				
@@ -184,6 +262,11 @@ public class Panel extends JPanel implements Runnable {
 	public void paint(Graphics g) {
 		
 		g.clearRect(0, 0, 1024, 300);
+		
+		g.setColor(Color.black);
+		g.setFont(new Font("monospace", Font.BOLD, 36));
+		g.drawString("" + bestFitness() + " - " + gen, 500, 50);
+		
 		for (Runner r : runners) {
 			
 			g.setColor(r.getColor());
